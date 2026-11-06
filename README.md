@@ -67,12 +67,10 @@ verticais virais — de forma automática e 100% local.
 
 ## Instalação
 
-1. Baixe o instalador gerado em `apps/frontend/dist_electron/` (`Twitch Clipper Setup <versão>.exe`)
+1. Baixe em realeses
 2. Execute e siga o assistente de instalação
 3. Na primeira abertura, complete o assistente de configuração (veja abaixo)
 
-> Não quer instalar? A pasta `win-unpacked/` gerada junto ao instalador contém uma
-> versão portátil: basta executar `Twitch Clipper.exe`.
 
 ## Configuração inicial
 
