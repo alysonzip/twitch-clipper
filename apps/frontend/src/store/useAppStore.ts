@@ -93,7 +93,7 @@ export const useAppStore = create<AppState>()(
     (set) => ({
       isSidebarOpen: true,
       toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
-      settingsLoaded: false,
+      settingsLoaded: true,
       setSettingsLoaded: (loaded) => set({ settingsLoaded: loaded }),
       isFirstRun: true,
       setIsFirstRun: (firstRun) => set({ isFirstRun: firstRun }),
