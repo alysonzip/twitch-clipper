@@ -1,0 +1,64 @@
+{
+  "name": "twitch-clipper-frontend",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Twitch Clipper - gerador automatico de clips virais da Twitch",
+  "author": "Twitch Clipper",
+  "type": "module",
+  "main": "dist-electron/main.mjs",
+  "scripts": {
+    "dev": "vite",
+    "build:renderer": "tsc && vite build",
+    "build:electron": "esbuild electron/main.ts electron/preload.ts --bundle --platform=node --format=esm --target=node20 --external:electron --outdir=dist-electron --out-extension:.js=.mjs",
+    "build": "npm run build:renderer && npm run build:electron",
+    "preview": "vite preview",
+    "package": "npm run build && electron-builder"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.26.2",
+    "zustand": "^4.5.5",
+    "lucide-react": "^0.441.0",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^2.5.2"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.9",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "autoprefixer": "^10.4.20",
+    "electron": "^30.0.1",
+    "electron-builder": "^24.13.3",
+    "esbuild": "^0.21.5",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.12",
+    "typescript": "^5.6.2",
+    "vite": "^5.4.8",
+    "wait-on": "^8.0.1"
+  },
+  "build": {
+    "appId": "com.twitchclipper.app",
+    "productName": "Twitch Clipper",
+    "electronVersion": "30.5.1",
+    "npmRebuild": false,
+    "directories": { "output": "dist_electron" },
+    "files": ["dist/**/*", "dist-electron/**/*", "build/icon.ico"],
+    "extraResources": [
+      { "from": "backend", "to": "backend", "filter": ["**/*"] }
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.ico",
+      "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Twitch Clipper"
+    }
+  }
+}

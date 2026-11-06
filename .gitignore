@@ -1,0 +1,54 @@
+# Dependencias (Node)
+node_modules/
+.pnp
+.pnp.js
+
+# Dependencias / cache (Python)
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Build - frontend
+apps/frontend/dist/
+apps/frontend/dist-electron/
+apps/frontend/dist_electron/
+apps/frontend/cypress/videos/
+apps/frontend/cypress/screenshots/
+
+# Build - backend (PyInstaller)
+apps/backend/build/
+apps/backend/dist/
+
+# Binario do backend copiado para o frontend (gerado por build_backend.py)
+apps/frontend/backend/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Ambiente (variaveis locais)
+.env
+.env.local
+.env.*.local
+
+# Banco de dados local
+*.db
+*.db-journal
+
+# Editores / SO
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Trae / agentes
+.trae/
