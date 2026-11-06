@@ -7,7 +7,7 @@
   ],
   "scripts": {
     "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
-    "dev:frontend": "npm run dev --workspace=apps/frontend",
+    "dev:frontend": "npm run dev:app --workspace=apps/frontend",
     "dev:backend": "cd apps/backend && uv run python -m src.main",
     "build": "npm run build --workspaces",
     "package": "npm run package --workspaces"

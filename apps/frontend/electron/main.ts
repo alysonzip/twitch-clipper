@@ -1,11 +1,15 @@
 import { app, BrowserWindow, Tray, Menu, nativeImage, shell, ipcMain, protocol } from 'electron'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
-import { spawn, ChildProcess } from 'child_process'
+import { spawn, exec, ChildProcess } from 'child_process'
 import { setupBackend } from './backend'
 import { registerIpcHandlers } from './ipc'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
+
+// Em desenvolvimento (app nao empacotado) carrega o servidor do Vite.
+// Em producao carrega o HTML gerado em ./dist.
+const DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL ?? (app.isPackaged ? null : 'http://localhost:5173')
 
 let mainWindow: BrowserWindow | null = null
 let tray: Tray | null = null
@@ -29,17 +33,28 @@ async function createWindow() {
     icon: join(__dirname, '../build/icon.ico'),
   })
 
-  // Load URL
-  if (process.env.VITE_DEV_SERVER_URL) {
-    await mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL)
-    mainWindow.webContents.openDevTools()
-  } else {
-    await mainWindow.loadFile(join(__dirname, '../dist/index.html'))
-  }
-
+  // Garante que a janela apareca mesmo se o renderer falhar ao carregar
   mainWindow.once('ready-to-show', () => {
     mainWindow?.show()
   })
+
+  mainWindow.webContents.on('did-fail-load', (_event, errorCode, errorDescription, validatedURL) => {
+    console.error(`Falha ao carregar a interface (${errorCode}): ${errorDescription} - ${validatedURL}`)
+    mainWindow?.show()
+  })
+
+  // Load URL
+  try {
+    if (DEV_SERVER_URL) {
+      await mainWindow.loadURL(DEV_SERVER_URL)
+      mainWindow.webContents.openDevTools()
+    } else {
+      await mainWindow.loadFile(join(__dirname, '../dist/index.html'))
+    }
+  } catch (err) {
+    console.error('Erro ao carregar a interface:', err)
+    mainWindow?.show()
+  }
 
   mainWindow.on('close', (e) => {
     if (!isQuitting) {
@@ -113,11 +128,11 @@ function createTray() {
 }
 
 async function startBackend() {
-  const backendPath = process.env.VITE_DEV_SERVER_URL
+  const backendPath = DEV_SERVER_URL
     ? join(__dirname, '../../backend/src/main.py')
     : join(process.resourcesPath, 'backend', 'backend.exe')
 
-  if (process.env.VITE_DEV_SERVER_URL) {
+  if (DEV_SERVER_URL) {
     // Dev mode: run with uvicorn
     backendProcess = spawn('uv', ['run', 'uvicorn', 'src.main:app', '--port', '8765'], {
       cwd: join(__dirname, '../../backend'),
@@ -143,8 +158,10 @@ async function startBackend() {
     backendProcess = null
   })
 
-  // Wait for backend to be ready
-  await waitForBackend()
+  // Verifica o backend em segundo plano, sem bloquear a interface
+  waitForBackend()
+    .then(() => console.log('Backend is ready'))
+    .catch((err) => console.error('Backend indisponivel:', err.message))
 }
 
 async function waitForBackend(maxRetries = 30): Promise<void> {
@@ -180,18 +197,19 @@ async function setupApp() {
     return new Response(null, { status: 200, headers: { Location: 'twitchclipper://callback' } })
   })
 
-  // Setup backend
-  await setupBackend()
-
-  // Start backend
-  await startBackend()
-
-  // Register IPC handlers
+  // Cria a janela primeiro: a interface aparece independente do backend
+  await createWindow()
   registerIpcHandlers(mainWindow!)
 
-  // Create window and tray
-  await createWindow()
-  createTray()
+  try {
+    createTray()
+  } catch (err) {
+    console.error('Falha ao criar o icone da bandeja:', err)
+  }
+
+  // Inicia o backend em segundo plano (best-effort)
+  await setupBackend()
+  startBackend().catch((err) => console.error('Falha ao iniciar backend:', err))
 
   // Auto-start if enabled
   const settings = await getSettings()
@@ -207,7 +225,6 @@ async function getSettings() {
 
 function setupAutoStart(enable: boolean) {
   if (process.platform === 'win32') {
-    const { exec } = require('child_process')
     const appPath = process.execPath
     const regCmd = enable
       ? `reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run" /v "TwitchClipper" /t REG_SZ /d "${appPath}" /f`
